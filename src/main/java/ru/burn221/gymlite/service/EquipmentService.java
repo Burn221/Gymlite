@@ -1,11 +1,14 @@
 package ru.burn221.gymlite.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import ru.burn221.gymlite.model.BookingStatus;
 import ru.burn221.gymlite.model.Equipment;
 import ru.burn221.gymlite.model.Zone;
+import ru.burn221.gymlite.repository.BookingRepository;
 import ru.burn221.gymlite.repository.EquipmentRepository;
 import ru.burn221.gymlite.repository.ZoneRepository;
 
@@ -16,12 +19,20 @@ import java.math.BigDecimal;
 public class EquipmentService {
     private final EquipmentRepository equipmentRepository;
     private final ZoneRepository zoneRepository;
+    private final BookingRepository bookingRepository;
 
+
+    @Transactional
     public Equipment createEquipment(Integer zoneId, String equipmentName, String description, BigDecimal price, boolean active) {
         Zone zone = zoneRepository.findById(zoneId).
-                orElseThrow(() -> new RuntimeException("This zone doesn't exist"));
-        if (equipmentRepository.existsByZone_IdAndEquipmentName(zoneId, equipmentName)) {
-            throw new IllegalArgumentException("This equipment already exists!");
+                orElseThrow(() -> new RuntimeException("Zone with id " + zoneId + " not found"));
+        if (equipmentRepository.existsByZone_IdAndEquipmentNameIgnoreCase(zoneId, equipmentName)) {
+            throw new IllegalArgumentException("Equipment " + equipmentName + " already exists");
+        }
+        if(equipmentName.isEmpty()) throw new IllegalArgumentException("Name can't be empty");
+
+        if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Price must be >= 0");
         }
 
         Equipment equipment = new Equipment();
@@ -36,10 +47,24 @@ public class EquipmentService {
 
     }
 
-    public Equipment updateEquipment(Integer zoneId, String equipmentName, String description, BigDecimal price, boolean active) {
+    @Transactional
+    public Equipment updateEquipment(Integer equipmentId, Integer zoneId, String equipmentName, String description, BigDecimal price, boolean active) {
+        Equipment equipment = equipmentRepository.findById(equipmentId)
+                .orElseThrow(() -> new RuntimeException("Equipment " + equipmentName + " not found or inactive"));
         Zone zone = zoneRepository.findById(zoneId).
-                orElseThrow(() -> new RuntimeException("This zone doesn't exist"));
-        Equipment equipment = new Equipment();
+                orElseThrow(() -> new RuntimeException("Zone with id " + zoneId + " not found"));
+
+        if (equipmentRepository.existsByZone_IdAndEquipmentNameAndIdNot(zoneId, equipmentName, equipmentId)) {
+            throw new IllegalArgumentException("Equipment with this name already exists in the zone");
+        }
+
+        if(equipmentName.isEmpty()) throw new IllegalArgumentException("Name can't be empty");
+
+        if (price == null || price.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Price must be >= 0");
+        }
+
+
         equipment.setZone(zone);
         equipment.setEquipmentName(equipmentName);
         equipment.setDescription(description);
@@ -58,26 +83,28 @@ public class EquipmentService {
 
     }
 
-    public Equipment getActiveEquipmentById(Integer id){
+    public Equipment getActiveEquipmentById(Integer id) {
         return equipmentRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(()->new RuntimeException("This zone doesn't exist"));
+                .orElseThrow(() -> new RuntimeException("Equipment not found or inactive"));
     }
 
-    public Equipment getActiveEquipmentByZoneId(Integer zoneId ){
+    public Page<Equipment> getActiveEquipmentByZoneId(Integer zoneId, Pageable pageable) {
 
-        return equipmentRepository.findByZone_IdAndActiveTrue(zoneId)
-                .orElseThrow(()->new RuntimeException("This zone doesn't exist!"));
+        return equipmentRepository.findByZone_IdAndActiveTrue(zoneId,pageable);
+
 
     }
 
-    public Page<Equipment> getAllActiveEquipment( Pageable pageable){
+
+    public Page<Equipment> getAllActiveEquipment(Pageable pageable) {
         return equipmentRepository.findByActiveTrue(pageable);
 
     }
 
-    public Equipment deactivateEquipment(Integer id){
-        Equipment equipment= equipmentRepository.findById(id)
-                .orElseThrow(()->new RuntimeException("This equipment doesn't exist"));
+    @Transactional
+    public Equipment deactivateEquipment(Integer id) {
+        Equipment equipment = equipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Equipment not found or inactive"));
         equipment.setActive(false);
 
         return equipmentRepository.save(equipment);
@@ -85,13 +112,22 @@ public class EquipmentService {
 
     }
 
-    public Equipment activateEquipment(Integer id){
-        Equipment equipment= equipmentRepository.findById(id)
-                .orElseThrow(()->new RuntimeException("This equipment doesn't exist"));
+    @Transactional
+    public Equipment activateEquipment(Integer id) {
+        Equipment equipment = equipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Equipment not found or inactive"));
         equipment.setActive(true);
 
         return equipmentRepository.save(equipment);
 
 
+    }
+
+    @Transactional
+    public void deleteEquipment(Integer id){
+        if(bookingRepository.existsByEquipment_IdAndBookingStatus(id, BookingStatus.BOOKED)){
+            throw new IllegalArgumentException("This equipment has active bookings");
+        }
+        equipmentRepository.deleteById(id);
     }
 }

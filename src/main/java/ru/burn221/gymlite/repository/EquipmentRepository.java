@@ -11,15 +11,17 @@ import java.util.Optional;
 @Repository
 public interface EquipmentRepository extends JpaRepository<Equipment,Integer> {
 
-    boolean existsByZone_IdAndEquipmentName(Integer zoneId, String equipmentName);
+    boolean existsByZone_IdAndEquipmentNameIgnoreCase(Integer zoneId, String equipmentName);
 
-    boolean existByZone_Id(Integer zoneId);
+    boolean existsByZone_Id(Integer zoneId);
+
+    boolean existsByZone_IdAndEquipmentNameAndIdNot(Integer zoneId, String equipmentName, Integer id);
 
 
 
     Page<Equipment> findByZone_Id(Integer zoneId, Pageable pageable);
 
-    Optional<Equipment> findByZone_IdAndActiveTrue(Integer zoneId);
+    Page<Equipment> findByZone_IdAndActiveTrue(Integer zoneId, Pageable pageable);
 
     Optional<Equipment> findByIdAndActiveTrue(Integer id);
 

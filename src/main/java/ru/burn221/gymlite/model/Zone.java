@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -19,8 +21,12 @@ public class Zone {
     @Column (name = "zone_name", unique = true, nullable = false)
     private String zoneName;
     private String description;
+    @Column(nullable = false)
     private boolean active;
+    @CreationTimestamp
+    @Column(nullable = false,updatable = false)
     private LocalDateTime createdAt;
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
 

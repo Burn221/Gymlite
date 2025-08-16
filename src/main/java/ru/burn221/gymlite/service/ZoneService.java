@@ -17,7 +17,7 @@ public class ZoneService {
     @Transactional
     public Zone createZone(String zoneName, String description, boolean active){
         if(zoneRepository.existsByZoneNameIgnoreCase(zoneName)){
-            throw new IllegalArgumentException("This zone already exists!");
+            throw new IllegalArgumentException("This zone already exists "+ zoneName);
 
         }
         Zone zone= new Zone();
@@ -30,16 +30,17 @@ public class ZoneService {
 
     public Zone getZone(String zoneName){
         return zoneRepository.findByZoneNameIgnoreCase(zoneName)
-                .orElseThrow(()-> new RuntimeException("Zone not found "+ zoneName));
+                .orElseThrow(()-> new RuntimeException("Zone "+zoneName+" not found "));
     }
 
     public Page<Zone> getAllZones(Pageable pageable){
         return zoneRepository.findAll(pageable);
     }
     @Transactional
-    public Zone updateZone(String zoneName, String description, boolean active){
+    public Zone updateZone(Integer zoneId,String zoneName, String description, boolean active){
 
-        Zone zone= new Zone();
+        Zone zone= zoneRepository.findById(zoneId)
+                .orElseThrow(()->new RuntimeException("Zone "+zoneName+" not found "));
 
         zone.setZoneName(zoneName);
         zone.setDescription(description);
@@ -49,7 +50,7 @@ public class ZoneService {
 
     public Zone deactivateZone(Integer id){
         Zone zone= zoneRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("This zone doesn't exist"));
+                .orElseThrow(()-> new RuntimeException("Zone with id "+id+" not found"));
         zone.setActive(false);
 
         return zoneRepository.save(zone);
@@ -57,16 +58,16 @@ public class ZoneService {
 
     public Zone activateZone(Integer id){
         Zone zone= zoneRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("This zone doesn't exist"));
+                .orElseThrow(()-> new RuntimeException("Zone with id "+id+" not found"));
         zone.setActive(true);
 
         return zoneRepository.save(zone);
     }
 
-    public Zone getActiveZoneById(Integer Id ){
+    public Zone getActiveZoneById(Integer id ){
 
-        return zoneRepository.findByIdAndActiveTrue(Id)
-                .orElseThrow(()->new RuntimeException("This zone doesn't exist!"));
+        return zoneRepository.findByIdAndActiveTrue(id)
+                .orElseThrow(()->new RuntimeException("Zone with id "+id+" not found"));
 
     }
 
@@ -76,8 +77,8 @@ public class ZoneService {
     }
     @Transactional
     public void deleteZone(Integer id){
-        if(equipmentRepository.existByZone_Id(id)){
-            throw new RuntimeException("This zone has existing equipment!");
+        if(equipmentRepository.existsByZone_Id(id)){
+            throw new RuntimeException("This zone has existing equipment");
         }
         else{
             zoneRepository.deleteById(id);
