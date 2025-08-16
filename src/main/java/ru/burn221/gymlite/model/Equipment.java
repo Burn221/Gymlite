@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,10 +31,14 @@ public class Equipment {
     @Column(name = "equipment_name", nullable = false)
     private String equipmentName;
     private String description;
+    @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
     @Column(nullable = false)
     private Boolean active;
+    @CreationTimestamp
+    @Column(nullable = false,updatable = false)
     private LocalDateTime createdAt;
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
 

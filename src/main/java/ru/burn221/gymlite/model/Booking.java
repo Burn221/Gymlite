@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,15 +23,17 @@ public class Booking {
     private Equipment equipment_id;
     @Column(nullable = false)
     private String userName;
-    @Column(name = "start_time")
+    @Column(name = "start_time",nullable = false)
     private LocalDateTime startTime;
-    @Column(name = "end_time")
+    @Column(name = "end_time",nullable = false)
     private LocalDateTime endTime;
-    @Column(name = "final_price")
+    @Column(name = "final_price",precision = 10, scale = 2, nullable = false)
     private BigDecimal finalPrice;
     @Enumerated(EnumType.STRING)
-    @Column(name= "booking_status")
-    private BookingStatus.bookingStatus bookedStatus;
+    @Column(name= "booking_status",nullable = false)
+    private BookingStatus bookingStatus;
+    @CreationTimestamp
+    @Column(nullable = false,updatable = false)
     private LocalDateTime createdAt;
 
 
