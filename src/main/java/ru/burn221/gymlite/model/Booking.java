@@ -20,7 +20,7 @@ public class Booking {
     private Integer id;
     @ManyToOne
     @JoinColumn(name = "equipment_id",nullable = false)
-    private Equipment equipment_id;
+    private Equipment equipment;
     @Column(nullable = false)
     private String userName;
     @Column(name = "start_time",nullable = false)
