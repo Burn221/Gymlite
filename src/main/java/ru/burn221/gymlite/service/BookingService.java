@@ -40,6 +40,10 @@ public class BookingService {
             throw new IllegalArgumentException("Start time can't be after end time");
         }
 
+        if(userName==null || userName.isBlank()){
+            throw new IllegalArgumentException("User name can't be blank");
+        }
+
         if (bookingRepository.existsOverlappingBooking(equipmentId, startTime, endTime)) {
             throw new RuntimeException("This time is already taken");
         }
@@ -47,7 +51,7 @@ public class BookingService {
         if(bookingRepository.existsByEquipment_IdAndUserNameIsAndStartTimeIsAndEndTimeIs(equipmentId,userName,startTime,endTime)){
             throw new IllegalArgumentException("This booking already exists");
         }
-        booking.setEquipment_id(equipment);
+        booking.setEquipment(equipment);
         booking.setUserName(userName);
         booking.setStartTime(startTime);
         booking.setEndTime(endTime);
@@ -99,7 +103,7 @@ public class BookingService {
         if(bookingRepository.existsByEquipment_IdAndUserNameAndStartTimeAndEndTimeAndIdNot(equipmentId,userName,startTime,endTime,bookingId)){
             throw new IllegalArgumentException("This booking already exists");
         }
-        booking.setEquipment_id(equipment);
+        booking.setEquipment(equipment);
         booking.setUserName(userName);
         booking.setStartTime(startTime);
         booking.setEndTime(endTime);
@@ -162,7 +166,7 @@ public class BookingService {
     }
 
     public List<Booking> getBookingByEquipmentIdAndTime(Integer equipmentId, LocalDateTime startTime, LocalDateTime endTime ){
-        return bookingRepository.findByEquipment_IdAndStartTimeLessThanAndEndTimeGreaterThan(equipmentId,startTime,endTime);
+        return bookingRepository.findByEquipment_IdAndStartTimeLessThanAndEndTimeGreaterThan(equipmentId,endTime,startTime);
     }
 
     public Page<Booking> getBookingByEquipmentId(Integer equipmentId,Pageable pageable){
