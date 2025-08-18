@@ -42,7 +42,7 @@ public class ZoneService {
         Zone zone= zoneRepository.findById(zoneId)
                 .orElseThrow(()->new RuntimeException("Zone "+zoneName+" not found "));
 
-        zone.setZoneName(zoneName);
+        zone.setZoneName(zoneName.trim());
         zone.setDescription(description);
         zone.setActive(active);
         return zoneRepository.save(zone);

@@ -35,6 +35,8 @@ public class EquipmentService {
             throw new IllegalArgumentException("Price must be >= 0");
         }
 
+
+
         Equipment equipment = new Equipment();
 
         equipment.setZone(zone);
@@ -66,7 +68,7 @@ public class EquipmentService {
 
 
         equipment.setZone(zone);
-        equipment.setEquipmentName(equipmentName);
+        equipment.setEquipmentName(equipmentName.trim());
         equipment.setDescription(description);
         equipment.setPrice(price);
         equipment.setActive(active);
