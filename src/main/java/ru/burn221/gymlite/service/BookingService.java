@@ -23,7 +23,7 @@ import java.util.List;
 public class BookingService {
     private final BookingRepository bookingRepository;
     private final EquipmentRepository equipmentRepository;
-    private final ZoneRepository zoneRepository;
+
 
     @Transactional
     public Booking createBooking(Integer equipmentId
@@ -52,7 +52,7 @@ public class BookingService {
             throw new IllegalArgumentException("This booking already exists");
         }
         booking.setEquipment(equipment);
-        booking.setUserName(userName);
+        booking.setUserName(userName.trim());
         booking.setStartTime(startTime);
         booking.setEndTime(endTime);
         booking.setBookingStatus(BookingStatus.BOOKED);
