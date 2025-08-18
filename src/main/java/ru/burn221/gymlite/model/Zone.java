@@ -1,19 +1,14 @@
 package ru.burn221.gymlite.model;
 
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
-@NoArgsConstructor
-@Getter
-@Setter
+@Data
 public class Zone {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
