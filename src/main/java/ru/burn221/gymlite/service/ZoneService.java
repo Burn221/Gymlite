@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import ru.burn221.gymlite.mapper.ZoneMapper;
 import ru.burn221.gymlite.model.Zone;
 import ru.burn221.gymlite.repository.EquipmentRepository;
 import ru.burn221.gymlite.repository.ZoneRepository;
@@ -14,6 +15,7 @@ import ru.burn221.gymlite.repository.ZoneRepository;
 public class ZoneService {
     private final ZoneRepository zoneRepository;
     private final EquipmentRepository equipmentRepository;
+    private final ZoneMapper zoneMapper;
     @Transactional
     public Zone createZone(String zoneName, String description, boolean active){
         if(zoneRepository.existsByZoneNameIgnoreCase(zoneName)){

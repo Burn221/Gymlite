@@ -1,9 +1,8 @@
 package ru.burn221.gymlite.model;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -11,9 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@NoArgsConstructor
-@Getter
-@Setter
+@Data
 @Table(
         name = "equipment",
         uniqueConstraints = {
