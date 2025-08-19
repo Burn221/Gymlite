@@ -5,6 +5,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import ru.burn221.gymlite.dto.booking.BookingCreateRequest;
+import ru.burn221.gymlite.dto.booking.BookingResponse;
+import ru.burn221.gymlite.dto.booking.BookingUpdateRequest;
+import ru.burn221.gymlite.mapper.BookingMapper;
 import ru.burn221.gymlite.model.Booking;
 import ru.burn221.gymlite.model.BookingStatus;
 import ru.burn221.gymlite.model.Equipment;
@@ -12,53 +16,49 @@ import ru.burn221.gymlite.repository.BookingRepository;
 import ru.burn221.gymlite.repository.EquipmentRepository;
 import ru.burn221.gymlite.repository.ZoneRepository;
 
+import java.awt.print.Book;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class BookingService {
     private final BookingRepository bookingRepository;
     private final EquipmentRepository equipmentRepository;
-
+    private final BookingMapper bookingMapper;
 
     @Transactional
-    public Booking createBooking(Integer equipmentId
-            , String userName
-            , LocalDateTime startTime
-            , LocalDateTime endTime
-            ) {
+    public BookingResponse createBooking(BookingCreateRequest dto) {
 
-        Booking booking = new Booking();
-        Equipment equipment = equipmentRepository.findById(equipmentId)
-                .orElseThrow(() -> new RuntimeException("Equipment with id " + equipmentId + " not found"));
+        String normalizedName= dto.userName();
+        Equipment equipment = equipmentRepository.findById(dto.equipmentId())
+                .orElseThrow(() -> new RuntimeException("Equipment with id " + dto.equipmentId() + " not found"));
 
-        if (endTime == null || startTime == null || startTime.isAfter(endTime)) {
+        if (dto.endTime() == null || dto.startTime() == null || dto.startTime().isAfter(dto.endTime())) {
             throw new IllegalArgumentException("Start time can't be after end time");
         }
 
-        if(userName==null || userName.isBlank()){
+        if(normalizedName==null || normalizedName.isBlank()){
             throw new IllegalArgumentException("User name can't be blank");
         }
 
-        if (bookingRepository.existsOverlappingBooking(equipmentId, startTime, endTime)) {
+        if (bookingRepository.existsOverlappingBooking(dto.equipmentId(), dto.startTime(), dto.endTime())) {
             throw new RuntimeException("This time is already taken");
         }
 
-        if(bookingRepository.existsByEquipment_IdAndUserNameIsAndStartTimeIsAndEndTimeIs(equipmentId,userName,startTime,endTime)){
+        if(bookingRepository.existsByEquipment_IdAndUserNameIsAndStartTimeIsAndEndTimeIs(dto.equipmentId(), normalizedName,dto.startTime(),dto.endTime())){
             throw new IllegalArgumentException("This booking already exists");
         }
-        booking.setEquipment(equipment);
-        booking.setUserName(userName.trim());
-        booking.setStartTime(startTime);
-        booking.setEndTime(endTime);
+        Booking booking= bookingMapper.toEntity(dto,equipment);
+        booking.setFinalPrice(computeFinalPrice(equipment.getPrice(),dto.startTime(),dto.endTime()));
         booking.setBookingStatus(BookingStatus.BOOKED);
-        booking.setFinalPrice(computeFinalPrice(equipment.getPrice(), startTime, endTime));
 
-        return bookingRepository.save(booking);
+        Booking saved= bookingRepository.save(booking);
+        return bookingMapper.toResponse(saved);
 
 
     }
@@ -80,43 +80,35 @@ public class BookingService {
     }
 
     @Transactional
-    public Booking updateBooking(Integer bookingId
-            , Integer equipmentId
-            , String userName
-            , LocalDateTime startTime
-            , LocalDateTime endTime
-            , BookingStatus bookingStatus) {
+    public BookingResponse updateBooking(BookingUpdateRequest dto) {
+        String normalizedName= dto.userName().trim();
+        Booking booking = bookingRepository.findById(dto.bookingId())
+                .orElseThrow(() -> new IllegalArgumentException("Booking with id " + dto.bookingId() + " not found"));
+        Equipment equipment = equipmentRepository.findById(dto.equipmentId())
+                .orElseThrow(() -> new RuntimeException("Equipment with id " + dto.equipmentId() + " not found"));
 
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new IllegalArgumentException("Booking with id " + bookingId + " not found"));
-        Equipment equipment = equipmentRepository.findById(equipmentId)
-                .orElseThrow(() -> new RuntimeException("Equipment with id " + equipmentId + " not found"));
-
-        if (endTime == null || startTime == null || startTime.isAfter(endTime)) {
+        if (dto.endTime() == null || dto.startTime() == null || dto.startTime().isAfter(dto.endTime())) {
             throw new IllegalArgumentException("Start time can't be after end time");
         }
 
-        if (bookingRepository.existsOverlappingBookingExcludingId(bookingId,equipmentId, startTime, endTime)) {
+        if (bookingRepository.existsOverlappingBookingExcludingId(dto.bookingId(),dto.equipmentId(), dto.startTime(), dto.endTime())) {
             throw new RuntimeException("This time is already taken");
         }
 
-        if(bookingRepository.existsByEquipment_IdAndUserNameAndStartTimeAndEndTimeAndIdNot(equipmentId,userName,startTime,endTime,bookingId)){
+        if(bookingRepository.existsByEquipment_IdAndUserNameAndStartTimeAndEndTimeAndIdNot(dto.equipmentId(),normalizedName,dto.startTime(),dto.endTime(),dto.bookingId())){
             throw new IllegalArgumentException("This booking already exists");
         }
-        booking.setEquipment(equipment);
-        booking.setUserName(userName);
-        booking.setStartTime(startTime);
-        booking.setEndTime(endTime);
-        booking.setBookingStatus(bookingStatus);
-        booking.setFinalPrice(computeFinalPrice(equipment.getPrice(), startTime, endTime));
 
-        return bookingRepository.save(booking);
+        bookingMapper.update(booking, dto, equipment);
+        booking.setFinalPrice(computeFinalPrice(equipment.getPrice(),dto.startTime(),dto.endTime()));
+        Booking saved= bookingRepository.save(booking);
+        return bookingMapper.toResponse(saved);
 
 
     }
 
     @Transactional
-    public Booking cancelBooking(Integer bookingId) {
+    public BookingResponse cancelBooking(Integer bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking with id " + bookingId + " not found"));
 
@@ -124,11 +116,13 @@ public class BookingService {
             throw new IllegalArgumentException("This booking is already canceled");
         }
         booking.setBookingStatus(BookingStatus.CANCELED);
-        return bookingRepository.save(booking);
+
+        Booking saved= bookingRepository.save(booking);
+        return bookingMapper.toResponse(saved);
     }
 
     @Transactional
-    public Booking completeBooking(Integer bookingId) {
+    public BookingResponse completeBooking(Integer bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new IllegalArgumentException("Booking with id " + bookingId + " not found"));
 
@@ -136,7 +130,9 @@ public class BookingService {
             throw new IllegalArgumentException("This booking is already completed");
         }
         booking.setBookingStatus(BookingStatus.COMPLETED);
-        return bookingRepository.save(booking);
+
+        Booking saved= bookingRepository.save(booking);
+        return bookingMapper.toResponse(saved);
     }
 
     @Transactional
@@ -161,16 +157,19 @@ public class BookingService {
 
     }
 
-    public Page<Booking> getBookingByUser(String username, Pageable pageable){
-        return bookingRepository.findByUserNameOrderByStartTimeDesc(username,pageable);
+    public Page<BookingResponse> getBookingByUser(String username, Pageable pageable){
+        return bookingRepository.findByUserNameOrderByStartTimeDesc(username,pageable)
+                .map(bookingMapper::toResponse);
     }
 
-    public List<Booking> getBookingByEquipmentIdAndTime(Integer equipmentId, LocalDateTime startTime, LocalDateTime endTime ){
-        return bookingRepository.findByEquipment_IdAndStartTimeLessThanAndEndTimeGreaterThan(equipmentId,endTime,startTime);
+    public List<BookingResponse> getBookingByEquipmentIdAndTime(Integer equipmentId, LocalDateTime startTime, LocalDateTime endTime ){
+        return bookingRepository.findByEquipment_IdAndStartTimeLessThanAndEndTimeGreaterThan(equipmentId,endTime,startTime)
+                .stream().map(bookingMapper::toResponse).collect(Collectors.toList());
     }
 
-    public Page<Booking> getBookingByEquipmentId(Integer equipmentId,Pageable pageable){
-        return bookingRepository.findByEquipment_Id(equipmentId,pageable);
+    public Page<BookingResponse> getBookingByEquipmentId(Integer equipmentId,Pageable pageable){
+        return bookingRepository.findByEquipment_Id(equipmentId,pageable)
+                .map(bookingMapper::toResponse);
     }
 
 

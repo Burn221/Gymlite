@@ -21,6 +21,10 @@ public interface ZoneRepository extends JpaRepository<Zone, Integer> {
 
     Optional<Zone> findByIdAndActiveTrue(Integer id);
 
+
+
+
+
     Page<Zone> findByActiveTrue(Pageable pageable);
 
 

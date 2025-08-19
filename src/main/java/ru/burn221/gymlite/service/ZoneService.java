@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import ru.burn221.gymlite.dto.zone.ZoneCreateRequest;
+import ru.burn221.gymlite.dto.zone.ZoneResponse;
+import ru.burn221.gymlite.dto.zone.ZoneUpdateRequest;
 import ru.burn221.gymlite.mapper.ZoneMapper;
 import ru.burn221.gymlite.model.Zone;
 import ru.burn221.gymlite.repository.EquipmentRepository;
@@ -16,65 +19,88 @@ public class ZoneService {
     private final ZoneRepository zoneRepository;
     private final EquipmentRepository equipmentRepository;
     private final ZoneMapper zoneMapper;
+
     @Transactional
-    public Zone createZone(String zoneName, String description, boolean active){
-        if(zoneRepository.existsByZoneNameIgnoreCase(zoneName)){
-            throw new IllegalArgumentException("This zone already exists "+ zoneName);
+    public ZoneResponse createZone(ZoneCreateRequest dto){
+        String normalizedName= dto.zoneName().trim();
+        if(zoneRepository.existsByZoneNameIgnoreCase(normalizedName)){
+            throw new IllegalArgumentException("This zone already exists "+ normalizedName);
 
         }
-        Zone zone= new Zone();
+        Zone zone= zoneMapper.toEntity(dto);
 
-        zone.setZoneName(zoneName);
-        zone.setDescription(description);
-        zone.setActive(active);
-        return zoneRepository.save(zone);
+        Zone save= zoneRepository.save(zone);
+
+        return zoneMapper.toResponse(save);
+
     }
 
-    public Zone getZone(String zoneName){
-        return zoneRepository.findByZoneNameIgnoreCase(zoneName)
-                .orElseThrow(()-> new RuntimeException("Zone "+zoneName+" not found "));
+    public ZoneResponse getZone(String zoneName){
+        String normalizedName= zoneName.trim();
+        Zone zone=zoneRepository.findByZoneNameIgnoreCase(normalizedName)
+                .orElseThrow(()-> new RuntimeException("Zone "+normalizedName+" not found "));
+        return zoneMapper.toResponse(zone);
     }
 
-    public Page<Zone> getAllZones(Pageable pageable){
-        return zoneRepository.findAll(pageable);
+    public Page<ZoneResponse> getAllZones(Pageable pageable){
+        return zoneRepository.findAll(pageable)
+                .map(zoneMapper::toResponse);
     }
     @Transactional
-    public Zone updateZone(Integer zoneId,String zoneName, String description, boolean active){
+    public ZoneResponse updateZone(ZoneUpdateRequest dto){
+        String normalizedName= dto.zoneName().trim();
+        Zone zone= zoneRepository.findById(dto.id())
+                .orElseThrow(()->new RuntimeException("Zone "+normalizedName+" not found "));
 
-        Zone zone= zoneRepository.findById(zoneId)
-                .orElseThrow(()->new RuntimeException("Zone "+zoneName+" not found "));
+        if (!zone.getZoneName().equalsIgnoreCase(normalizedName)
+                && zoneRepository.existsByZoneNameIgnoreCase(normalizedName)) {
+            throw new IllegalArgumentException("Zone with name '" + normalizedName + "' already exists");
+        }
 
-        zone.setZoneName(zoneName.trim());
-        zone.setDescription(description);
-        zone.setActive(active);
-        return zoneRepository.save(zone);
+        zoneMapper.update(zone,dto);
+        Zone saved= zoneRepository.save(zone);
+        return zoneMapper.toResponse(saved);
     }
 
-    public Zone deactivateZone(Integer id){
+    public ZoneResponse deactivateZone(Integer id){
         Zone zone= zoneRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("Zone with id "+id+" not found"));
         zone.setActive(false);
 
-        return zoneRepository.save(zone);
+        return zoneMapper.toResponse(zoneRepository.save(zone));
     }
 
-    public Zone activateZone(Integer id){
+    public ZoneResponse activateZone(Integer id){
         Zone zone= zoneRepository.findById(id)
                 .orElseThrow(()-> new RuntimeException("Zone with id "+id+" not found"));
         zone.setActive(true);
 
-        return zoneRepository.save(zone);
+        return zoneMapper.toResponse(zoneRepository.save(zone));
     }
 
-    public Zone getActiveZoneById(Integer id ){
+    public ZoneResponse getActiveZoneById(Integer id ){
 
-        return zoneRepository.findByIdAndActiveTrue(id)
+        Zone zone= zoneRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(()->new RuntimeException("Zone with id "+id+" not found"));
 
+        return zoneMapper.toResponse(zone);
+
     }
 
-    public Page<Zone> getAllActiveZones(Pageable pageable){
-        return zoneRepository.findByActiveTrue(pageable);
+    public ZoneResponse getZoneById(Integer id ){
+
+        Zone zone= zoneRepository.findById(id)
+                .orElseThrow(()->new RuntimeException("Zone with id "+id+" not found"));
+
+        return zoneMapper.toResponse(zone);
+
+    }
+
+
+
+    public Page<ZoneResponse> getAllActiveZones(Pageable pageable){
+        return zoneRepository.findByActiveTrue(pageable)
+                .map(zoneMapper::toResponse);
 
     }
     @Transactional
