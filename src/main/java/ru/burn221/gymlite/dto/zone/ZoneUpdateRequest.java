@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public record ZoneUpdateRequest(
-        @NotNull @Positive Integer zoneId,
+        @NotNull @Positive Integer id,
         @NotBlank @Size(max=100) String zoneName,
         @Size(max = 500) String description,
         @NotNull Boolean active

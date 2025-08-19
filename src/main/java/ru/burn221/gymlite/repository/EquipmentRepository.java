@@ -15,7 +15,7 @@ public interface EquipmentRepository extends JpaRepository<Equipment,Integer> {
 
     boolean existsByZone_Id(Integer zoneId);
 
-    boolean existsByZone_IdAndEquipmentNameAndIdNot(Integer zoneId, String equipmentName, Integer id);
+    boolean existsByZone_IdAndEquipmentNameIgnoreCaseAndIdNot(Integer zoneId, String equipmentName, Integer id);
 
 
 
