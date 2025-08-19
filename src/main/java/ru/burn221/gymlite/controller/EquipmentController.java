@@ -52,14 +52,14 @@ public class EquipmentController {
 
     }
 
-    @PatchMapping ("/{id}/deactivate")
+    @PatchMapping ("/deactivate/{id}")
     public ResponseEntity<EquipmentResponse> deactivate (@PathVariable Integer id){
         EquipmentResponse deactivated= equipmentService.deactivateEquipment(id);
 
         return ResponseEntity.ok(deactivated);
     }
 
-    @PatchMapping ("/{id}/activate")
+    @PatchMapping ("/activate/{id}")
     public ResponseEntity<EquipmentResponse> activate (@PathVariable Integer id){
         EquipmentResponse activated= equipmentService.activateEquipment(id);
 

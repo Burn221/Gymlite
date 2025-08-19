@@ -81,6 +81,7 @@ public class BookingService {
 
     @Transactional
     public BookingResponse updateBooking(BookingUpdateRequest dto) {
+
         String normalizedName= dto.userName().trim();
         Booking booking = bookingRepository.findById(dto.bookingId())
                 .orElseThrow(() -> new IllegalArgumentException("Booking with id " + dto.bookingId() + " not found"));
@@ -101,6 +102,7 @@ public class BookingService {
 
         bookingMapper.update(booking, dto, equipment);
         booking.setFinalPrice(computeFinalPrice(equipment.getPrice(),dto.startTime(),dto.endTime()));
+
         Booking saved= bookingRepository.save(booking);
         return bookingMapper.toResponse(saved);
 
@@ -169,6 +171,11 @@ public class BookingService {
 
     public Page<BookingResponse> getBookingByEquipmentId(Integer equipmentId,Pageable pageable){
         return bookingRepository.findByEquipment_Id(equipmentId,pageable)
+                .map(bookingMapper::toResponse);
+    }
+
+    public Page<BookingResponse> getAll(Pageable pageable){
+        return bookingRepository.findAll(pageable)
                 .map(bookingMapper::toResponse);
     }
 

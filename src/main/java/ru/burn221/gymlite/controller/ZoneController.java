@@ -50,6 +50,7 @@ public class ZoneController {
 
     }
 
+    //todo
     @GetMapping("/{id}/active-zone")
     public ResponseEntity<ZoneResponse> getByIdActive(@PathVariable Integer id){
         return ResponseEntity.ok(zoneService.getActiveZoneById(id));
@@ -77,12 +78,12 @@ public class ZoneController {
                 return ResponseEntity.ok(page);
     }
 
-    @PostMapping ("/{id}/deactivate")
+    @PatchMapping ("/deactivate/{id}")
     public ResponseEntity<ZoneResponse> deactivate(@PathVariable Integer id){
         return ResponseEntity.ok(zoneService.deactivateZone(id));
     }
 
-    @PostMapping ("/{id}/activate")
+    @PatchMapping ("/activate/{id}")
     public ResponseEntity<ZoneResponse> activate(@PathVariable Integer id){
         return ResponseEntity.ok(zoneService.activateZone(id));
     }
