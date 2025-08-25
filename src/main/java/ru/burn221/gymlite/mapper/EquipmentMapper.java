@@ -12,11 +12,21 @@ import ru.burn221.gymlite.model.Zone;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface EquipmentMapper {
-    @Mapping(target = "id",ignore = true)
-    @Mapping(target = "zone",source = "zone")
+
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "zone",        source = "zone")
+    @Mapping(target = "equipmentName", source = "dto.equipmentName")
+    @Mapping(target = "description", source = "dto.description")
+    @Mapping(target = "price",       source = "dto.price")
+    @Mapping(target = "active",      source = "dto.active")
     Equipment toEntity(EquipmentCreateRequest dto, Zone zone);
 
-    @Mapping(target = "zone", source = "zone")
+    @Mapping(target = "zone",          source = "zone")
+    @Mapping(target = "equipmentName", source = "dto.equipmentName")
+    @Mapping(target = "description",   source = "dto.description")
+    @Mapping(target = "price",         source = "dto.price")
+    @Mapping(target = "active",        source = "dto.active")
     void update(@MappingTarget Equipment target, EquipmentUpdateRequest dto, Zone zone);
 
     @Mapping(target = "zoneId", source = "zone.id")

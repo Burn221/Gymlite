@@ -53,12 +53,12 @@ public class BookingController {
         return ResponseEntity.ok(updated);
     }
 
-    @PatchMapping("/{id}/cancel")
+    @PatchMapping("/cancel/{id}")
     public ResponseEntity<BookingResponse> cancel(@PathVariable Integer id) {
         return ResponseEntity.ok(bookingService.cancelBooking(id));
     }
 
-    @PatchMapping("/{id}/complete")
+    @PatchMapping("/complete/{id}")
     public ResponseEntity<BookingResponse> complete(@PathVariable Integer id) {
         return ResponseEntity.ok(bookingService.completeBooking(id));
     }
@@ -70,13 +70,23 @@ public class BookingController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{bookingStatus}/by-status")
+    @DeleteMapping("/by-status/{bookingStatus}")
     public ResponseEntity<Void> deleteByStatus(@PathVariable BookingStatus bookingStatus) {
         bookingService.deleteAllByStatus(bookingStatus);
 
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping
+    public ResponseEntity<Page<BookingResponse>> getAll(
+            @ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable
+    ) {
+
+
+        return ResponseEntity.ok(bookingService.getAll(pageable));
+    }
+
+    //todo
     @GetMapping("/by-user/{userName}")
     public ResponseEntity<Page<BookingResponse>> getAllByUser(@PathVariable String userName,
                                                               @ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable) {

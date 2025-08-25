@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import ru.burn221.gymlite.dto.zone.ZoneCreateRequest;
 import ru.burn221.gymlite.dto.zone.ZoneResponse;
 import ru.burn221.gymlite.dto.zone.ZoneUpdateRequest;
+import ru.burn221.gymlite.exceptions.ConflictException;
+import ru.burn221.gymlite.exceptions.NotFoundException;
 import ru.burn221.gymlite.mapper.ZoneMapper;
 import ru.burn221.gymlite.model.Zone;
 import ru.burn221.gymlite.repository.EquipmentRepository;
@@ -24,7 +26,7 @@ public class ZoneService {
     public ZoneResponse createZone(ZoneCreateRequest dto){
         String normalizedName= dto.zoneName().trim();
         if(zoneRepository.existsByZoneNameIgnoreCase(normalizedName)){
-            throw new IllegalArgumentException("This zone already exists "+ normalizedName);
+            throw new ConflictException("This zone already exists "+ normalizedName);
 
         }
         Zone zone= zoneMapper.toEntity(dto);
@@ -38,7 +40,7 @@ public class ZoneService {
     public ZoneResponse getZone(String zoneName){
         String normalizedName= zoneName.trim();
         Zone zone=zoneRepository.findByZoneNameIgnoreCase(normalizedName)
-                .orElseThrow(()-> new RuntimeException("Zone "+normalizedName+" not found "));
+                .orElseThrow(()-> new NotFoundException("Zone "+normalizedName+" not found "));
         return zoneMapper.toResponse(zone);
     }
 
@@ -50,11 +52,11 @@ public class ZoneService {
     public ZoneResponse updateZone(ZoneUpdateRequest dto){
         String normalizedName= dto.zoneName().trim();
         Zone zone= zoneRepository.findById(dto.id())
-                .orElseThrow(()->new RuntimeException("Zone "+normalizedName+" not found "));
+                .orElseThrow(()->new NotFoundException("Zone "+normalizedName+" not found "));
 
         if (!zone.getZoneName().equalsIgnoreCase(normalizedName)
                 && zoneRepository.existsByZoneNameIgnoreCase(normalizedName)) {
-            throw new IllegalArgumentException("Zone with name '" + normalizedName + "' already exists");
+            throw new ConflictException("Zone with name '" + normalizedName + "' already exists");
         }
 
         zoneMapper.update(zone,dto);
@@ -64,7 +66,7 @@ public class ZoneService {
 
     public ZoneResponse deactivateZone(Integer id){
         Zone zone= zoneRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Zone with id "+id+" not found"));
+                .orElseThrow(()-> new NotFoundException("Zone with id "+id+" not found"));
         zone.setActive(false);
 
         return zoneMapper.toResponse(zoneRepository.save(zone));
@@ -72,7 +74,7 @@ public class ZoneService {
 
     public ZoneResponse activateZone(Integer id){
         Zone zone= zoneRepository.findById(id)
-                .orElseThrow(()-> new RuntimeException("Zone with id "+id+" not found"));
+                .orElseThrow(()-> new NotFoundException("Zone with id "+id+" not found"));
         zone.setActive(true);
 
         return zoneMapper.toResponse(zoneRepository.save(zone));
@@ -81,7 +83,7 @@ public class ZoneService {
     public ZoneResponse getActiveZoneById(Integer id ){
 
         Zone zone= zoneRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(()->new RuntimeException("Zone with id "+id+" not found"));
+                .orElseThrow(()->new NotFoundException("Zone with id "+id+" not found"));
 
         return zoneMapper.toResponse(zone);
 
@@ -90,7 +92,7 @@ public class ZoneService {
     public ZoneResponse getZoneById(Integer id ){
 
         Zone zone= zoneRepository.findById(id)
-                .orElseThrow(()->new RuntimeException("Zone with id "+id+" not found"));
+                .orElseThrow(()->new NotFoundException("Zone with id "+id+" not found"));
 
         return zoneMapper.toResponse(zone);
 
@@ -106,7 +108,7 @@ public class ZoneService {
     @Transactional
     public void deleteZone(Integer id){
         if(equipmentRepository.existsByZone_Id(id)){
-            throw new RuntimeException("This zone has existing equipment");
+            throw new ConflictException("Zone with id "+id+" has existing equipment");
         }
         else{
             zoneRepository.deleteById(id);

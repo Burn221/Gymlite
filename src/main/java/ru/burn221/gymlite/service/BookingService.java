@@ -8,15 +8,17 @@ import org.springframework.stereotype.Service;
 import ru.burn221.gymlite.dto.booking.BookingCreateRequest;
 import ru.burn221.gymlite.dto.booking.BookingResponse;
 import ru.burn221.gymlite.dto.booking.BookingUpdateRequest;
+import ru.burn221.gymlite.exceptions.ConflictException;
+import ru.burn221.gymlite.exceptions.NotFoundException;
 import ru.burn221.gymlite.mapper.BookingMapper;
 import ru.burn221.gymlite.model.Booking;
 import ru.burn221.gymlite.model.BookingStatus;
 import ru.burn221.gymlite.model.Equipment;
 import ru.burn221.gymlite.repository.BookingRepository;
 import ru.burn221.gymlite.repository.EquipmentRepository;
-import ru.burn221.gymlite.repository.ZoneRepository;
 
-import java.awt.print.Book;
+
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -36,7 +38,7 @@ public class BookingService {
 
         String normalizedName= dto.userName();
         Equipment equipment = equipmentRepository.findById(dto.equipmentId())
-                .orElseThrow(() -> new RuntimeException("Equipment with id " + dto.equipmentId() + " not found"));
+                .orElseThrow(() -> new NotFoundException("Equipment with id " + dto.equipmentId() + " not found"));
 
         if (dto.endTime() == null || dto.startTime() == null || dto.startTime().isAfter(dto.endTime())) {
             throw new IllegalArgumentException("Start time can't be after end time");
@@ -47,11 +49,11 @@ public class BookingService {
         }
 
         if (bookingRepository.existsOverlappingBooking(dto.equipmentId(), dto.startTime(), dto.endTime())) {
-            throw new RuntimeException("This time is already taken");
+            throw new ConflictException("This time is already taken");
         }
 
         if(bookingRepository.existsByEquipment_IdAndUserNameIsAndStartTimeIsAndEndTimeIs(dto.equipmentId(), normalizedName,dto.startTime(),dto.endTime())){
-            throw new IllegalArgumentException("This booking already exists");
+            throw new ConflictException("This booking already exists");
         }
         Booking booking= bookingMapper.toEntity(dto,equipment);
         booking.setFinalPrice(computeFinalPrice(equipment.getPrice(),dto.startTime(),dto.endTime()));
@@ -81,26 +83,28 @@ public class BookingService {
 
     @Transactional
     public BookingResponse updateBooking(BookingUpdateRequest dto) {
+
         String normalizedName= dto.userName().trim();
         Booking booking = bookingRepository.findById(dto.bookingId())
-                .orElseThrow(() -> new IllegalArgumentException("Booking with id " + dto.bookingId() + " not found"));
+                .orElseThrow(() -> new NotFoundException("Booking with id " + dto.bookingId() + " not found"));
         Equipment equipment = equipmentRepository.findById(dto.equipmentId())
-                .orElseThrow(() -> new RuntimeException("Equipment with id " + dto.equipmentId() + " not found"));
+                .orElseThrow(() -> new NotFoundException("Equipment with id " + dto.equipmentId() + " not found"));
 
         if (dto.endTime() == null || dto.startTime() == null || dto.startTime().isAfter(dto.endTime())) {
             throw new IllegalArgumentException("Start time can't be after end time");
         }
 
         if (bookingRepository.existsOverlappingBookingExcludingId(dto.bookingId(),dto.equipmentId(), dto.startTime(), dto.endTime())) {
-            throw new RuntimeException("This time is already taken");
+            throw new ConflictException("This time is already taken");
         }
 
         if(bookingRepository.existsByEquipment_IdAndUserNameAndStartTimeAndEndTimeAndIdNot(dto.equipmentId(),normalizedName,dto.startTime(),dto.endTime(),dto.bookingId())){
-            throw new IllegalArgumentException("This booking already exists");
+            throw new ConflictException("This booking already exists");
         }
 
         bookingMapper.update(booking, dto, equipment);
         booking.setFinalPrice(computeFinalPrice(equipment.getPrice(),dto.startTime(),dto.endTime()));
+
         Booking saved= bookingRepository.save(booking);
         return bookingMapper.toResponse(saved);
 
@@ -110,10 +114,10 @@ public class BookingService {
     @Transactional
     public BookingResponse cancelBooking(Integer bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new IllegalArgumentException("Booking with id " + bookingId + " not found"));
+                .orElseThrow(() -> new NotFoundException("Booking with id " + bookingId + " not found"));
 
         if (booking.getBookingStatus().equals(BookingStatus.CANCELED)) {
-            throw new IllegalArgumentException("This booking is already canceled");
+            throw new ConflictException("This booking is already canceled");
         }
         booking.setBookingStatus(BookingStatus.CANCELED);
 
@@ -124,10 +128,10 @@ public class BookingService {
     @Transactional
     public BookingResponse completeBooking(Integer bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new IllegalArgumentException("Booking with id " + bookingId + " not found"));
+                .orElseThrow(() -> new NotFoundException("Booking with id " + bookingId + " not found"));
 
         if (booking.getBookingStatus().equals(BookingStatus.COMPLETED)) {
-            throw new IllegalArgumentException("This booking is already completed");
+            throw new ConflictException("This booking is already completed");
         }
         booking.setBookingStatus(BookingStatus.COMPLETED);
 
@@ -138,10 +142,10 @@ public class BookingService {
     @Transactional
     public void deleteBooking(Integer bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new IllegalArgumentException("Booking with id " + bookingId + " not found"));
+                .orElseThrow(() -> new NotFoundException("Booking with id " + bookingId + " not found"));
 
         if (booking.getBookingStatus().equals(BookingStatus.BOOKED)) {
-            throw new IllegalArgumentException("This booking can't be deleted");
+            throw new ConflictException("This booking can't be deleted");
 
         }
         bookingRepository.deleteById(bookingId);
@@ -150,7 +154,8 @@ public class BookingService {
     @Transactional
     public void deleteAllByStatus(BookingStatus bookingStatus){
         if (bookingStatus.equals(BookingStatus.BOOKED)){
-            throw new IllegalArgumentException("This book can't be deleted");
+            throw new ConflictException(
+                    "This book can't be deleted");
         }
         bookingRepository.deleteByBookingStatus(bookingStatus);
 
@@ -169,6 +174,11 @@ public class BookingService {
 
     public Page<BookingResponse> getBookingByEquipmentId(Integer equipmentId,Pageable pageable){
         return bookingRepository.findByEquipment_Id(equipmentId,pageable)
+                .map(bookingMapper::toResponse);
+    }
+
+    public Page<BookingResponse> getAll(Pageable pageable){
+        return bookingRepository.findAll(pageable)
                 .map(bookingMapper::toResponse);
     }
 
