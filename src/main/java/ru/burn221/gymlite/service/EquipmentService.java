@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import ru.burn221.gymlite.dto.equipment.EquipmentCreateRequest;
 import ru.burn221.gymlite.dto.equipment.EquipmentResponse;
 import ru.burn221.gymlite.dto.equipment.EquipmentUpdateRequest;
+import ru.burn221.gymlite.exceptions.ConflictException;
+import ru.burn221.gymlite.exceptions.NotFoundException;
 import ru.burn221.gymlite.mapper.EquipmentMapper;
 import ru.burn221.gymlite.model.BookingStatus;
 import ru.burn221.gymlite.model.Equipment;
@@ -31,9 +33,9 @@ public class EquipmentService {
     public EquipmentResponse createEquipment(EquipmentCreateRequest dto) {
         String normalizedName = dto.equipmentName().trim();
         Zone zone = zoneRepository.findById(dto.zoneId()).
-                orElseThrow(() -> new RuntimeException("Zone with id " + dto.zoneId() + " not found"));
+                orElseThrow(() -> new NotFoundException("Zone with id " + dto.zoneId() + " not found"));
         if (equipmentRepository.existsByZone_IdAndEquipmentNameIgnoreCase(dto.zoneId(), normalizedName)) {
-            throw new IllegalArgumentException("Equipment " + dto.equipmentName() + " already exists");
+            throw new ConflictException("Equipment " + dto.equipmentName() + " already exists");
         }
         if (normalizedName.isBlank()) throw new IllegalArgumentException("Name can't be empty");
 
@@ -53,12 +55,12 @@ public class EquipmentService {
         String normalizedName = dto.equipmentName().trim();
 
         Equipment equipment = equipmentRepository.findById(dto.equipmentId())
-                .orElseThrow(() -> new RuntimeException("Equipment " + dto.equipmentId() + " not found or inactive"));
+                .orElseThrow(() -> new NotFoundException("Equipment " + dto.equipmentId() + " not found"));
         Zone zone = zoneRepository.findById(dto.zoneId()).
-                orElseThrow(() -> new RuntimeException("Zone with id " + dto.zoneId() + " not found"));
+                orElseThrow(() -> new NotFoundException("Zone with id " + dto.zoneId() + " not found"));
 
         if (equipmentRepository.existsByZone_IdAndEquipmentNameIgnoreCaseAndIdNot(dto.zoneId(), normalizedName, dto.equipmentId())) {
-            throw new IllegalArgumentException("Equipment with this name already exists in the zone");
+            throw new ConflictException("Equipment with this name already exists in the zone");
         }
 
         if (normalizedName.isBlank()) throw new IllegalArgumentException("Name can't be empty");
@@ -88,14 +90,14 @@ public class EquipmentService {
 
     public EquipmentResponse getActiveEquipmentById(Integer id) {
         Equipment equipment=equipmentRepository.findByIdAndActiveTrue(id)
-                .orElseThrow(() -> new RuntimeException("Equipment not found or inactive"));
+                .orElseThrow(() -> new NotFoundException("Equipment with id  "+id+ " not found "));
 
         return equipmentMapper.toResponse(equipment);
     }
 
     public EquipmentResponse getEquipmentById(Integer id) {
         Equipment equipment=equipmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Equipment not found "));
+                .orElseThrow(() -> new NotFoundException("Equipment with id  "+id+ " not found "));
 
         return equipmentMapper.toResponse(equipment);
     }
@@ -118,7 +120,7 @@ public class EquipmentService {
     @Transactional
     public EquipmentResponse deactivateEquipment(Integer id) {
         Equipment equipment = equipmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Equipment not found or inactive"));
+                .orElseThrow(() -> new NotFoundException("Equipment with id  "+id+ " not found "));
         equipment.setActive(false);
 
         return equipmentMapper.toResponse(equipmentRepository.save(equipment));
@@ -129,7 +131,7 @@ public class EquipmentService {
     @Transactional
     public EquipmentResponse activateEquipment(Integer id) {
         Equipment equipment = equipmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Equipment not found or inactive"));
+                .orElseThrow(() -> new NotFoundException("Equipment with id  "+id+ " not found "));
         equipment.setActive(true);
 
         return equipmentMapper.toResponse(equipmentRepository.save(equipment));
@@ -140,7 +142,7 @@ public class EquipmentService {
     @Transactional
     public void deleteEquipment(Integer id) {
         if (bookingRepository.existsByEquipment_IdAndBookingStatus(id, BookingStatus.BOOKED)) {
-            throw new IllegalArgumentException("This equipment has active bookings");
+            throw new ConflictException("Equipment with id "+id+" has active bookings");
         }
         equipmentRepository.deleteById(id);
     }
