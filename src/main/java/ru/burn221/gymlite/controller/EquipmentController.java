@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.burn221.gymlite.dto.equipment.EquipmentCreateRequest;
 import ru.burn221.gymlite.dto.equipment.EquipmentResponse;
 import ru.burn221.gymlite.dto.equipment.EquipmentUpdateRequest;
-import ru.burn221.gymlite.service.EquipmentService;
+import ru.burn221.gymlite.service.impl.EquipmentServiceImpl;
 
 import java.net.URI;
 
@@ -22,11 +22,11 @@ import java.net.URI;
 @Validated
 public class EquipmentController {
 
-    private final EquipmentService equipmentService;
+    private final EquipmentServiceImpl equipmentServiceImpl;
 
     @PostMapping
     public ResponseEntity<EquipmentResponse> create(@RequestBody @Valid EquipmentCreateRequest request){
-        EquipmentResponse created= equipmentService.createEquipment(request);
+        EquipmentResponse created= equipmentServiceImpl.createEquipment(request);
 
         return ResponseEntity.created(URI.create("/api/equipment/"+created.id()))
                 .body(created);
@@ -46,7 +46,7 @@ public class EquipmentController {
                 request.active()
         );
 
-        EquipmentResponse updated= equipmentService.updateEquipment(fixed);
+        EquipmentResponse updated= equipmentServiceImpl.updateEquipment(fixed);
 
         return ResponseEntity.ok(updated);
 
@@ -54,40 +54,40 @@ public class EquipmentController {
 
     @PatchMapping ("/deactivate/{id}")
     public ResponseEntity<EquipmentResponse> deactivate (@PathVariable Integer id){
-        EquipmentResponse deactivated= equipmentService.deactivateEquipment(id);
+        EquipmentResponse deactivated= equipmentServiceImpl.deactivateEquipment(id);
 
         return ResponseEntity.ok(deactivated);
     }
 
     @PatchMapping ("/activate/{id}")
     public ResponseEntity<EquipmentResponse> activate (@PathVariable Integer id){
-        EquipmentResponse activated= equipmentService.activateEquipment(id);
+        EquipmentResponse activated= equipmentServiceImpl.activateEquipment(id);
 
         return ResponseEntity.ok(activated);
     }
 
     @DeleteMapping ("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id){
-        equipmentService.deleteEquipment(id);
+        equipmentServiceImpl.deleteEquipment(id);
 
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping ("/{id}")
     public ResponseEntity<EquipmentResponse>  getById(@PathVariable Integer id){
-        return ResponseEntity.ok(equipmentService.getEquipmentById(id));
+        return ResponseEntity.ok(equipmentServiceImpl.getEquipmentById(id));
     }
 
     @GetMapping ("/{id}/active")
     public ResponseEntity<EquipmentResponse>  getByIdActive(@PathVariable Integer id){
-        return ResponseEntity.ok(equipmentService.getActiveEquipmentById(id));
+        return ResponseEntity.ok(equipmentServiceImpl.getActiveEquipmentById(id));
     }
 
     @GetMapping ("/{zoneId}/all-equipment-zone")
     public ResponseEntity<Page<EquipmentResponse>> allEquipmentByZone(@PathVariable Integer zoneId,
             @ParameterObject @PageableDefault(size = 20, sort = "id")Pageable pageable
             ){
-        Page<EquipmentResponse> page= equipmentService.getEquipmentByZoneId(zoneId,pageable);
+        Page<EquipmentResponse> page= equipmentServiceImpl.getEquipmentByZoneId(zoneId,pageable);
 
         return  ResponseEntity.ok(page);
 
@@ -97,7 +97,7 @@ public class EquipmentController {
     public ResponseEntity<Page<EquipmentResponse>> getAllActiveEquipmentByZone(@PathVariable Integer zoneId
             , @ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable){
 
-        Page<EquipmentResponse> page= equipmentService.getActiveEquipmentByZoneId(zoneId,pageable);
+        Page<EquipmentResponse> page= equipmentServiceImpl.getActiveEquipmentByZoneId(zoneId,pageable);
 
         return  ResponseEntity.ok(page);
 
@@ -109,8 +109,8 @@ public class EquipmentController {
             @ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable)
     {
         Page<EquipmentResponse> page= (active!=null && active)
-                ? equipmentService.getAllActiveEquipment(pageable)
-                : equipmentService.getAllEquipment(pageable);
+                ? equipmentServiceImpl.getAllActiveEquipment(pageable)
+                : equipmentServiceImpl.getAllEquipment(pageable);
 
         return ResponseEntity.ok(page);
     }

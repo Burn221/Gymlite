@@ -14,7 +14,7 @@ import ru.burn221.gymlite.dto.booking.BookingCreateRequest;
 import ru.burn221.gymlite.dto.booking.BookingResponse;
 import ru.burn221.gymlite.dto.booking.BookingUpdateRequest;
 import ru.burn221.gymlite.model.BookingStatus;
-import ru.burn221.gymlite.service.BookingService;
+import ru.burn221.gymlite.service.impl.BookingServiceImpl;
 
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -26,11 +26,11 @@ import java.util.List;
 @RequestMapping("/api/bookings")
 public class BookingController {
 
-    private final BookingService bookingService;
+    private final BookingServiceImpl bookingServiceImpl;
 
     @PostMapping
     public ResponseEntity<BookingResponse> create(@RequestBody @Valid BookingCreateRequest request) {
-        BookingResponse created = bookingService.createBooking(request);
+        BookingResponse created = bookingServiceImpl.createBooking(request);
 
         return ResponseEntity.created(URI.create("/api/booking/" + created.id()))
                 .body(created);
@@ -48,31 +48,31 @@ public class BookingController {
                 request.bookingStatus()
         );
 
-        BookingResponse updated = bookingService.updateBooking(fixed);
+        BookingResponse updated = bookingServiceImpl.updateBooking(fixed);
 
         return ResponseEntity.ok(updated);
     }
 
     @PatchMapping("/cancel/{id}")
     public ResponseEntity<BookingResponse> cancel(@PathVariable Integer id) {
-        return ResponseEntity.ok(bookingService.cancelBooking(id));
+        return ResponseEntity.ok(bookingServiceImpl.cancelBooking(id));
     }
 
     @PatchMapping("/complete/{id}")
     public ResponseEntity<BookingResponse> complete(@PathVariable Integer id) {
-        return ResponseEntity.ok(bookingService.completeBooking(id));
+        return ResponseEntity.ok(bookingServiceImpl.completeBooking(id));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        bookingService.deleteBooking(id);
+        bookingServiceImpl.deleteBooking(id);
 
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/by-status/{bookingStatus}")
     public ResponseEntity<Void> deleteByStatus(@PathVariable BookingStatus bookingStatus) {
-        bookingService.deleteAllByStatus(bookingStatus);
+        bookingServiceImpl.deleteAllByStatus(bookingStatus);
 
         return ResponseEntity.noContent().build();
     }
@@ -83,14 +83,14 @@ public class BookingController {
     ) {
 
 
-        return ResponseEntity.ok(bookingService.getAll(pageable));
+        return ResponseEntity.ok(bookingServiceImpl.getAll(pageable));
     }
 
     //todo
     @GetMapping("/by-user/{userName}")
     public ResponseEntity<Page<BookingResponse>> getAllByUser(@PathVariable String userName,
                                                               @ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        Page<BookingResponse> page = bookingService.getBookingByUser(userName, pageable);
+        Page<BookingResponse> page = bookingServiceImpl.getBookingByUser(userName, pageable);
 
         return ResponseEntity.ok(page);
     }
@@ -100,7 +100,7 @@ public class BookingController {
                                                                           @RequestParam("start")
                                                                           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
                                                                           @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
-        List<BookingResponse> list = bookingService.getBookingByEquipmentIdAndTime(equipmentId, startTime, endTime);
+        List<BookingResponse> list = bookingServiceImpl.getBookingByEquipmentIdAndTime(equipmentId, startTime, endTime);
 
         return ResponseEntity.ok(list);
     }
@@ -108,7 +108,7 @@ public class BookingController {
     @GetMapping("/by-equipment/{equipmentId}")
     public ResponseEntity<Page<BookingResponse>> getAllByEquipment(@PathVariable Integer equipmentId,
                                                                    @ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable) {
-        Page<BookingResponse> page = bookingService.getBookingByEquipmentId(equipmentId, pageable);
+        Page<BookingResponse> page = bookingServiceImpl.getBookingByEquipmentId(equipmentId, pageable);
 
         return ResponseEntity.ok(page);
     }

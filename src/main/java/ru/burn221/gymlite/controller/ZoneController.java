@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.burn221.gymlite.dto.zone.ZoneCreateRequest;
 import ru.burn221.gymlite.dto.zone.ZoneResponse;
 import ru.burn221.gymlite.dto.zone.ZoneUpdateRequest;
-import ru.burn221.gymlite.service.ZoneService;
+import ru.burn221.gymlite.service.impl.ZoneServiceImpl;
 
 import java.net.URI;
 
@@ -21,11 +21,11 @@ import java.net.URI;
 @RequestMapping ("/api/zones")
 @Validated
 public class ZoneController {
-    private final ZoneService zoneService;
+    private final ZoneServiceImpl zoneServiceImpl;
 
     @PostMapping
     public ResponseEntity<ZoneResponse> create (@RequestBody @Valid ZoneCreateRequest request){
-        ZoneResponse created= zoneService.createZone(request);
+        ZoneResponse created= zoneServiceImpl.createZone(request);
 
         return ResponseEntity
                 .created(URI.create("/api/zones/"+created.id()))
@@ -44,7 +44,7 @@ public class ZoneController {
                 request.active()
         );
 
-        ZoneResponse updated= zoneService.updateZone(fixed);
+        ZoneResponse updated= zoneServiceImpl.updateZone(fixed);
 
         return ResponseEntity.ok(updated);
 
@@ -53,17 +53,17 @@ public class ZoneController {
     //todo
     @GetMapping("/{id}/active-zone")
     public ResponseEntity<ZoneResponse> getByIdActive(@PathVariable Integer id){
-        return ResponseEntity.ok(zoneService.getActiveZoneById(id));
+        return ResponseEntity.ok(zoneServiceImpl.getActiveZoneById(id));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ZoneResponse> getById(@PathVariable Integer id){
-        return ResponseEntity.ok(zoneService.getZoneById(id));
+        return ResponseEntity.ok(zoneServiceImpl.getZoneById(id));
     }
 
     @GetMapping("/by-name/{name}")
     public ResponseEntity<ZoneResponse> getByName(@PathVariable String name){
-        return ResponseEntity.ok(zoneService.getZone(name));
+        return ResponseEntity.ok(zoneServiceImpl.getZone(name));
     }
 
     @GetMapping
@@ -72,25 +72,25 @@ public class ZoneController {
             @ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable) {
 
                 Page<ZoneResponse> page= (active!=null && active)
-                ? zoneService.getAllActiveZones(pageable)
-                : zoneService.getAllZones(pageable);
+                ? zoneServiceImpl.getAllActiveZones(pageable)
+                : zoneServiceImpl.getAllZones(pageable);
 
                 return ResponseEntity.ok(page);
     }
 
     @PatchMapping ("/deactivate/{id}")
     public ResponseEntity<ZoneResponse> deactivate(@PathVariable Integer id){
-        return ResponseEntity.ok(zoneService.deactivateZone(id));
+        return ResponseEntity.ok(zoneServiceImpl.deactivateZone(id));
     }
 
     @PatchMapping ("/activate/{id}")
     public ResponseEntity<ZoneResponse> activate(@PathVariable Integer id){
-        return ResponseEntity.ok(zoneService.activateZone(id));
+        return ResponseEntity.ok(zoneServiceImpl.activateZone(id));
     }
 
     @DeleteMapping ("/{id}")
     public  ResponseEntity<Void> delete(@PathVariable Integer id){
-         zoneService.deleteZone(id);
+         zoneServiceImpl.deleteZone(id);
 
          return ResponseEntity.noContent().build();
     }
