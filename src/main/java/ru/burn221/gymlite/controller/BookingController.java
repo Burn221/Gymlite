@@ -112,7 +112,7 @@ public class BookingController {
                                                                           @RequestParam("start")
                                                                           @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
                                                                           @RequestParam("end") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
-        List<BookingResponse> list = bookingServiceImpl.getBookingByEquipmentIdAndTime(equipmentId, startTime, endTime);
+        List<BookingResponse> list = bookingServiceImpl.getBookingByEquipmentIdAndTime(equipmentId, startTime, endTime, BookingStatus.CANCELED);
 
         return ResponseEntity.ok(list);
     }

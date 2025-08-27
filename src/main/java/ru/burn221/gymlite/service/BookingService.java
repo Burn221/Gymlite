@@ -7,6 +7,7 @@ import ru.burn221.gymlite.dto.booking.BookingResponse;
 import ru.burn221.gymlite.dto.booking.BookingUpdateRequest;
 import ru.burn221.gymlite.model.BookingStatus;
 
+import java.awt.print.Book;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public interface BookingService {
 
     Page<BookingResponse> getBookingByUser(String username, Pageable pageable);
 
-    List<BookingResponse> getBookingByEquipmentIdAndTime(Integer equipmentId, LocalDateTime startTime, LocalDateTime endTime );
+    List<BookingResponse> getBookingByEquipmentIdAndTime(Integer equipmentId, LocalDateTime startTime, LocalDateTime endTime, BookingStatus bookingStatus);
 
     Page<BookingResponse> getBookingByEquipmentId(Integer equipmentId,Pageable pageable);
 
