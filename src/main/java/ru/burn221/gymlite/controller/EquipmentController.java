@@ -1,5 +1,7 @@
 package ru.burn221.gymlite.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -16,14 +18,16 @@ import ru.burn221.gymlite.service.impl.EquipmentServiceImpl;
 
 import java.net.URI;
 
+@Tag(name = "Equipment", description = "Gym equipment control")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/equipment")
+@RequestMapping("/api/v1/equipment")
 @Validated
 public class EquipmentController {
 
     private final EquipmentServiceImpl equipmentServiceImpl;
 
+    @Operation(summary = "Create equipment")
     @PostMapping
     public ResponseEntity<EquipmentResponse> create(@RequestBody @Valid EquipmentCreateRequest request){
         EquipmentResponse created= equipmentServiceImpl.createEquipment(request);
@@ -33,6 +37,7 @@ public class EquipmentController {
 
     }
 
+    @Operation(summary = "Update equipment")
     @PutMapping("/{id}")
     public ResponseEntity<EquipmentResponse> update(@PathVariable Integer id
             , @RequestBody @Valid EquipmentUpdateRequest request){
@@ -52,6 +57,7 @@ public class EquipmentController {
 
     }
 
+    @Operation(summary = "Deactivate equipment")
     @PatchMapping ("/deactivate/{id}")
     public ResponseEntity<EquipmentResponse> deactivate (@PathVariable Integer id){
         EquipmentResponse deactivated= equipmentServiceImpl.deactivateEquipment(id);
@@ -59,6 +65,7 @@ public class EquipmentController {
         return ResponseEntity.ok(deactivated);
     }
 
+    @Operation(summary = "Activate equipment")
     @PatchMapping ("/activate/{id}")
     public ResponseEntity<EquipmentResponse> activate (@PathVariable Integer id){
         EquipmentResponse activated= equipmentServiceImpl.activateEquipment(id);
@@ -66,6 +73,7 @@ public class EquipmentController {
         return ResponseEntity.ok(activated);
     }
 
+    @Operation(summary = "Delete equipment")
     @DeleteMapping ("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id){
         equipmentServiceImpl.deleteEquipment(id);
@@ -73,16 +81,19 @@ public class EquipmentController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Get equipment by Id")
     @GetMapping ("/{id}")
     public ResponseEntity<EquipmentResponse>  getById(@PathVariable Integer id){
         return ResponseEntity.ok(equipmentServiceImpl.getEquipmentById(id));
     }
 
+    @Operation(summary = "Get active equipment by Id")
     @GetMapping ("/{id}/active")
     public ResponseEntity<EquipmentResponse>  getByIdActive(@PathVariable Integer id){
         return ResponseEntity.ok(equipmentServiceImpl.getActiveEquipmentById(id));
     }
 
+    @Operation(summary = "Get all equipment by zone")
     @GetMapping ("/{zoneId}/all-equipment-zone")
     public ResponseEntity<Page<EquipmentResponse>> allEquipmentByZone(@PathVariable Integer zoneId,
             @ParameterObject @PageableDefault(size = 20, sort = "id")Pageable pageable
@@ -93,6 +104,7 @@ public class EquipmentController {
 
     }
 
+    @Operation(summary = "Get all active equipment by zone")
     @GetMapping ("/{zoneId}/all-equipment-zone-active")
     public ResponseEntity<Page<EquipmentResponse>> getAllActiveEquipmentByZone(@PathVariable Integer zoneId
             , @ParameterObject @PageableDefault(size = 20, sort = "id") Pageable pageable){
@@ -103,6 +115,7 @@ public class EquipmentController {
 
     }
 
+    @Operation(summary = "Get all equipment",description = "Returns all equipment if  value=false, returns all active equipment if value=true")
     @GetMapping
     public ResponseEntity<Page<EquipmentResponse>> list(
             @RequestParam(value = "active", required = false) Boolean active,
