@@ -32,7 +32,7 @@ public class EquipmentController {
     public ResponseEntity<EquipmentResponse> create(@RequestBody @Valid EquipmentCreateRequest request){
         EquipmentResponse created= equipmentServiceImpl.createEquipment(request);
 
-        return ResponseEntity.created(URI.create("/api/equipment/"+created.id()))
+        return ResponseEntity.created(URI.create("/api/v1/equipment/"+created.id()))
                 .body(created);
 
     }

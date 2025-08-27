@@ -33,7 +33,7 @@ public class ZoneController {
         ZoneResponse created = zoneServiceImpl.createZone(request);
 
         return ResponseEntity
-                .created(URI.create("/api/zones/" + created.id()))
+                .created(URI.create("/api/v1/zones/" + created.id()))
                 .body(created);
     }
 
