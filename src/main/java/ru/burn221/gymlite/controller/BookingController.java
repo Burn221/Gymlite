@@ -22,7 +22,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Tag(name = "Equipment",description = "Gym equipment control")
+@Tag(name = "Bookings",description = "Gym booking control")
 @RestController
 @RequiredArgsConstructor
 @Validated
@@ -36,7 +36,7 @@ public class BookingController {
     public ResponseEntity<BookingResponse> create(@RequestBody @Valid BookingCreateRequest request) {
         BookingResponse created = bookingServiceImpl.createBooking(request);
 
-        return ResponseEntity.created(URI.create("/api/booking/" + created.id()))
+        return ResponseEntity.created(URI.create("/api/v1/booking/" + created.id()))
                 .body(created);
     }
 
