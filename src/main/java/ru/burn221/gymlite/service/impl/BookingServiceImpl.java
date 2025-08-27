@@ -168,8 +168,8 @@ public class BookingServiceImpl implements BookingService {
                 .map(bookingMapper::toResponse);
     }
 
-    public List<BookingResponse> getBookingByEquipmentIdAndTime(Integer equipmentId, LocalDateTime startTime, LocalDateTime endTime ){
-        return bookingRepository.findByEquipment_IdAndStartTimeLessThanAndEndTimeGreaterThan(equipmentId,endTime,startTime)
+    public List<BookingResponse> getBookingByEquipmentIdAndTime(Integer equipmentId, LocalDateTime startTime, LocalDateTime endTime, BookingStatus bookingStatus ){
+        return bookingRepository.findByEquipment_IdAndStartTimeLessThanAndEndTimeGreaterThanAndBookingStatusIsNot(equipmentId,endTime,startTime,bookingStatus)
                 .stream().map(bookingMapper::toResponse).collect(Collectors.toList());
     }
 

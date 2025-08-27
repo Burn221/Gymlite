@@ -32,10 +32,11 @@ public interface BookingRepository extends JpaRepository<Booking,Integer> {
 
     boolean existsByEquipment_IdAndBookingStatus(Integer equipmentId, BookingStatus bookingStatus);
 
-    List<Booking> findByEquipment_IdAndStartTimeLessThanAndEndTimeGreaterThan(
+    List<Booking> findByEquipment_IdAndStartTimeLessThanAndEndTimeGreaterThanAndBookingStatusIsNot(
             Integer equipmentId,
             LocalDateTime startTime,
-            LocalDateTime endTime
+            LocalDateTime endTime,
+            BookingStatus bookingStatus
     );
 
 
