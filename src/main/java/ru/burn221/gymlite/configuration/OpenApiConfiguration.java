@@ -15,7 +15,7 @@ public class OpenApiConfiguration {
                 .info(new Info()
                         .title("Gymlite API specification")
                         .description("REST API for booking,equipment and zones in gym")
-                        .version("v 1"))
+                        .version("v1"))
                 .externalDocs(new ExternalDocumentation()
                         .description("README file for REST API")
                         .url("https://github.com/Burn221/Gymlite/blob/main/README.md"));
